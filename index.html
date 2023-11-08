@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Life of Su Shi</title>
+
+    <style>
+        #SVG {
+            background-color: white
+        }
+       /* 提示框 */
+		.tooltip {
+		  position: absolute;
+		  padding: 7px;
+		  font-size: 0.9em;
+		  pointer-events: none;
+		  background: #fff;
+		  border: 1px solid #ccc;
+		  border-radius: 4px;
+
+		  /* 添加阴影效果 */
+		  -moz-box-shadow:    3px 3px 10px 0px rgba(0, 0, 0, 0.25);
+		  -webkit-box-shadow: 3px 3px 10px 0px rgba(0, 0, 0, 0.25);
+		  box-shadow:         3px 3px 10px 0px rgba(0, 0, 0, 0.25);
+		}
+    </style>
+</head>
+<body>
+    <!-- 用作画布的svg元素 -->
+    <svg id='SVG'></svg>
+    <svg id='mapSvg'></svg>>
+    <svg id='pieSvg'></svg>>
+
+    <!-- <button type="button" onclick="changeColor('blue')">Blue</button> -->
+
+
+    <!-- 引入d3.js v7版本 -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <!-- <button type="button" onclick="changeColor('blue')">Blue</button> -->
+        <!-- <button type="button">Click Me!</button> -->
+
+
+        <!-- <textarea name="textarea"  cols="50" rows="10">文本内容</textarea> -->
+
+        <!-- <input type="value"> the value of the type attribute determines the style of input field -->
+
+    
+    <script>
+    // 设置画布大小、四周留白
+        let width = 600;
+        let height = 400;
+        let margin = {top: 120, right: 30, bottom: 30, left: 50};
+        let gap = 10;
+        // overall svg
+        var svg = d3.select("#SVG")
+            .attr("id", "mainsvg")
+            .attr("height",height+margin.top+margin.bottom)
+            .attr("width",width+gap+margin.right+margin.left)
+
+        // first svg
+        var svg1 = d3.select("SVG#mainsvg")
+            .append("svg")
+            .attr("id","svg1")
+            .attr("height", height)
+            .attr("width", width)
+            // .call(d3.zoom().on("zoom", function () {
+            // svg.attr("transform", `translate(${width}, -${height+80})`)}));
+        // var svg2 = d3.select("SVG#mainsvg")
+        //     .append("g") // group to move svg sideways
+        //     .attr("transform", "translate(" + (width+gap) + ")")
+        //     .append("svg")
+        //     .attr("id", "svg2")
+        //     .attr("height", height+20)
+        //     .attr("width", width)
+
+        var  svg2 = d3.select('#pieSvg')
+            .attr("height", height)
+            .attr("width", width)
+            .attr("transform", `translate(300, -${height+80})`);
+        
+        var svg3 = d3.select('#mapSvg')
+            .attr("height", height+20)
+            .attr("width", width)
+            // .call(d3.zoom().on("zoom", function () {
+            // svg.attr("transform", `translate(${width}, -${height+80})`)}))
+            .attr("transform", `translate(${width}, -${height+80})`);
+        
+        var svg_title = d3.select('#piesvg')
+            .attr("height", 100)
+            .attr("width", 200)
+        
+            // 分别绘制图形
+
+
+
+
+        svg_title.append("g")
+                .attr("transform", "translate(" + (width / 2 -80) + "," + 50 + ")")
+                .append("text")
+                .text("苏轼的足迹")
+                .attr("class", "title")
+                .attr("font-weight", 'bold')
+                .attr('font-size', '18')
+
+
+
+        // 在svg下添加组group，用来包含平行坐标图
+        var group = svg1.append("g");
+
+    //    在svg下添加组legend，用来包含图例
+        var legend = svg1.append("g");
+
+        // 异步方式读取数据
+        Promise.all([d3.json("sushi.json"),d3.json("china.geo.json")]).then(function (loadData){
+            
+            let data = loadData[0];
+		    let us = loadData[1];
+            let graph1 = new Object();
+            console.log(data)
+            data.forEach(d => {
+                let year = d.year_range
+                
+                if(graph1[year]){
+                    graph1[year].articles += d.articles
+                    graph1[year].account += d.article_count
+                    graph1[year].e_title = d.e_title
+                } else {
+                    graph1[year] = {
+                    'articles': d.articles,
+                    'account': d.article_count,
+                    'e_title': d.e_title,
+                }
+                }
+                
+                // console.log(graph1[year].articles1)
+            });
+            let graph1Obj = Object.keys(graph1)
+            // console.log(graph1)
+            // console.log(graph1Obj)
+            let graph3 = new Object();
+            let graph2 = 
+                {"幸福童年":[],"一鸣惊人":[],"初入仕途":[],"发妻去世":[],
+            "娶王闰之":[],"反对变法":[],"避祸杭州":[],"勤政一方":[],
+            "纳王朝云":[],"徐州救灾":[],"乌台诗案":[],"躬耕东坡":[],
+            "东坡居士":[],"重获重用":[],"修筑苏堤":[],"二贬惠州":[],
+            "再贬海南":[],"三落三起":[],"常州去世":[]};
+            // console.log(graph2["幸福童年"])
+            // 判断再不在列表里
+            function isInArray(arr,value){
+                for(var i = 0; i < arr.length; i++){
+                    if(value == arr[i]){
+                        return true;
+                    }
+                }
+                return false;}
+            console.log(isInArray([0,1],1))
+            console.log(isInArray([0,1],4))
+            data.forEach(d => {
+                let list = ["幸福童年","一鸣惊人","初入仕途","发妻去世",
+                "娶王闰之","反对变法","避祸杭州","勤政一方","纳王朝云",
+                "徐州救灾","乌台诗案","躬耕东坡","东坡居士",
+                "重获重用","修筑苏堤","二贬惠州","再贬海南","三落三起",
+                "常州去世"]
+                // console.log(list.length)
+                for (var i = 0;i< list.length ;i++)
+                {
+                    // console.log(i)
+                    // console.log(graph2[list[i]])
+                    if (d["e_title"] == list[i]) {
+                        graph2[list[i]].push(d["year_range"])
+                      
+                   }
+                }
+                
+            });  
+            let graph2Obj = Object.keys(graph2)
+            let graph4 = []; //整合gragh3数据
+            graph2Obj.forEach(d=>{
+                console.log(d)
+                console.log(graph2[d].length)
+                // graph4[d]=graph2[d].length
+                graph4.push([d,graph2[d].length])
+            }
+            )
+
+            console.log(graph1)
+            console.log(graph3) //空
+            console.log(graph4)
+            // console.log(graph2)
+            // console.log(graph2["三落三起"])
+            
+                // state = '"'+d["e_title"]+'"' 
+                // console.log(state)
+                // console.log(graph2[state])
+                // let year1 = '"'+d.year_range+'"'
+                // graph2[state].append(year1)
+                
+
+                // if(graph2["e_title"]){
+                //     graph2["e_title"] = 1}
+                //  else {
+                //     graph2[year].coordinate = d.coordinate}
+                
+           
+        
+            // console.log(graph1)
+            // console.log(graph1)
+            console.log(graph1Obj)
+
+            var min_article = d3.min(graph1Obj.map(d => graph1[d].account)) 
+            var max_article = d3.max(graph1Obj.map(d => graph1[d].account)) 
+            console.info(min_article)
+            console.info(max_article)
+
+
+            var scaleY = d3.scaleLinear()
+                .domain([min_article, max_article])
+                .range([height-margin.top-margin.bottom,0]);
+
+            // 定义Y坐标轴，这里的axisLeft代表的是刻度朝左
+            var axisY = d3.axisLeft(scaleY)
+                // .tickValues(y_axis) //设置显示的刻度;
+                // .tickFormat(d => y_label[d]);
+
+            // 在组内再创建一个组，绘制Y轴
+            group.append("g").call(axisY)
+                .append("text")
+                .attr("x", 30)
+                .attr("y", -10)
+                .attr("fill", "#000")
+                .attr("text-anchor", "end")
+                .attr("font-weight", "bold")
+                .text("article count");
+
+            // *******绘制X轴*******
+
+            var scaleX = d3.scaleLinear()
+                .domain([1036, 1101])
+                .range([0, width - margin.left-margin.right])
+                
+            var axisX = d3.axisBottom(scaleX)
+                    
+            
+            group.append("g").call(axisX)
+                .attr("transform",`translate(0,${height-margin.top-margin.bottom})`)
+                .append("text")
+                    .attr("x",width-margin.right-margin.left)
+                    .attr("y",-6)
+                    .attr("fill", "#000")
+                    .attr("text-anchor", "end")
+                    .attr("font-weight", "bold")
+                    .text("year");
+            
+
+
+            let tooltip = d3.select("body").append("div")
+			.attr("class", "tooltip")
+			.style("opacity", 0);
+
+            console.log(graph2["修筑苏堤"])
+            // console.log(graph1)
+            group.selectAll(".rect")
+                .data(graph1Obj)
+                .enter()
+                .append("rect")
+                .attr('class', 'rect')
+                .attr("id", "rect")
+                    .attr("x", (d, i) => {console.log(d,i); return (i * (width-margin.right-margin.left) /43)})
+                    .attr('y', (d) => scaleY(graph1[d].account))
+                    // .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
+                    .attr("width", (width-margin.right-margin.left) /43  )
+                    .attr("height", (d) => scaleY(min_article) - scaleY(graph1[d].account))
+                    .attr("fill",  d=>{if (graph1[d].e_title == '重获重用'){
+                        return "rgb(12,240,233)"
+                    }
+                    else {return "rgb(38,82,106)"}})
+                    // "#69b3a2")
+                    .on("mouseover", function (event, d){
+                        var coordinates= d3.pointer(event);
+                        var x = coordinates[0];
+                        var y = coordinates[1];
+            
+                        // console.info(d)
+                        tooltip.html(graph1[d].articles)
+                            .style("left", (x) + 'px') // 设置显示框的位置
+                            .style("top", (y+100) + 'px')
+                            .style("opacity", '1') // 让原本隐藏的tooltip显示出来
+                            // .style("scale",0.5)
+                    })
+                    .on("mouseout", function() {
+                    d3.select(this).transition().attr('r',1)
+                    tooltip.style('opacity', '0')
+                })
+                    // 这里是柱状图的信息
+                
+            
+            // 最后，将我们绘制的所有东西一起移动，空出留白，并在水平方向多移动50个像素，从而使得文本正常显示
+            group.attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+            // 地图的背景
+            // svg2.append("img").attr("")
+            svg2.append("rect")
+                        .attr("height", height)
+                        .attr("width", width)
+                        .attr("stroke", "black")
+                        .attr("fill", "#fde")
+                        .attr("stroke-width", 2)
+            var group2 = svg2.append("g")
+                        
+
+        // 创建一个projection通过 d3.geoAlbersUsa()（阿伯斯投影）
+		// translate()到画布中心
+		// 通过scale()来放大缩小
+            var projection = d3.geoMercator()
+                .center([107, 31 ])
+                .translate([width/2,height/2+100])
+                .scale(400)
+                // .rotate([-180,0]);
+
+            var path = d3.geoPath()
+                .projection(projection);
+            console.log(path)
+            // 颜色比例尺
+            var colors = d3.scaleOrdinal(d3.schemeGreens[5]);
+
+            let country = us.features;
+            console.log(country)
+
+
+            // 画城市的边界线
+            group2.selectAll(".path")
+                .data(country) //数据绑定
+                .enter()
+                .append("path") 
+                .attr("class", "country")
+                .attr("d", path) //绘制path
+                .attr('stroke',"white")
+                .attr('stroke-width',0.2)
+                .attr("fill",function (d, i) {
+                return colors(i)
+                })
+                .on("mouseover", function(event, d) {
+                    // 设置hover效果
+                    d3.select(this).style('stroke-width',2)
+                    
+                })
+                .on("mouseout", function() {
+                    d3.select(this).style('stroke-width',0.2);
+                })
+                
+
+            // var coor = d3.geoPath().projection([[d[lon], d[lat]]]);
+            // 绘制位置
+
+            // 用作提示的工具（当鼠标放置在对应位置时显示相关信息）
+            let tooltip2 = d3.select("body").append("div")
+                .attr("class", "tooltip2")
+                .style("opacity", 0);
+            
+            var sym = d3.symbol().type(d3.symbolCross).size(500);
+
+            console.log(data)
+            group2.selectAll(".points")
+                .data(data) //数据绑定
+                .enter()
+                .append("circle") 
+                .attr("class", "location")
+                //如果那里创造了美食则是黄色大圈
+                .attr('r', d=>{if (d.food != null){
+                        return 5
+                    }
+                    else {return 2}})
+                .attr("d", sym)
+                .attr('fill',  d=>{if (d.food != null){
+                        return "yellow"
+                    }
+                    else {return "rgb(239, 0, 101)"}})
+                
+                // 'black'
+                // )
+                .attr("cx", function(d) {return projection([d.longitude,d.latitude])[0]} )
+                .attr("cy", function(d) {return projection([d.longitude,d.latitude])[1]})
+                .on("mouseover", function(event, d) {
+                    d3.select(this).transition().attr('r',5)
+                    var coordinates= d3.pointer(event);
+                    var x = coordinates[0];
+                    var y = coordinates[1];
+                    // console.info(event);d.year_range, 
+                    console.log(d.food[0]['f_name'])
+                    tooltip.html(
+                        d.year_range+d.food[0]['f_name']
+                    ) // 设置tooltip中显示的内容
+                        .style("left", (x+200) + 'px') // 设置显示框的位置
+                        .style("top", (y+500) + 'px')  
+                        .style("opacity", '1'); // 让原本隐藏的tooltip显示出来
+
+                    // tooltip.html(d.year_range) // 设置tooltip中显示的内容
+                    //     .style("left", (x+400) + 'px') // 设置显示框的位置
+                    //     .style("top", (y-100) + 'px')  
+                    //     .style("opacity", '1');
+                    
+                        
+                })
+                .on("mouseout", function() {
+                    d3.select(this).transition().attr('r',1)
+                    tooltip.style('opacity', '0').style('stroke-width',2)
+                });
+
+
+            group2.attr("transform", "translate(0,-20)");
+            
+                                
+
+                // ******第3张图*****
+            var group3 = svg3.append("g")
+            // group3.append("g")
+            //     .attr("class", "slices");
+            // group3.append("g")
+            //     .attr("class", "labels");
+            // group3.append("g")
+            //     .attr("class", "lines");
+
+            // set the color scale
+            let color = d3.scaleOrdinal(d3.schemeSet3)
+            var pie = d3.pie()
+                .value((d)=>{return d[1]})
+            var piedata = pie(graph4)
+            // console.log(piedata)
+            
+
+            group3.selectAll('.pie')
+                .data(piedata)
+                .enter()
+                .append("path") 
+                
+                // .join('path')
+                
+                .attr('d', d3.arc()
+                    .innerRadius(70)
+                    .outerRadius(100)
+                )
+                .attr("class", "pie")
+                .attr('fill', function(d,i){ 
+                    // console.log(color(i));
+                    return color(i) })
+                .attr("stroke", "black")
+                .attr("stroke-width", "2px")
+                .attr("opacity", 0.7)
+                .attr("transform", `translate(${width/2}, ${height/2})`)
+                .on("mouseover", function(event, d) {
+                    // d3.select(this).transition().attr('r',5)
+                    var coordinates= d3.pointer(event);
+                    var x = coordinates[0];
+                    var y = coordinates[1];
+                    // console.log(d);
+                    tooltip.html(d.data[0]) // 设置tooltip中显示的内容
+                        .style("left", (x+1000) + 'px') // 设置显示框的位置
+                        .style("top", (y+200) + 'px')  
+                        .style("opacity", '1') // 让原本隐藏的tooltip显示出来
+                        .style("scale",'1.1')
+                })
+                .on("mouseout", function() {
+                    d3.select(this).transition().attr('r',1)
+                    tooltip.style('opacity', '0')
+                })
+
+                .on('click', function(e, d) {
+                    let x = d.data[0]
+                   
+                console.log(d.data)
+                d3.select(this)
+                    .transition().duration(400)
+                    .attr('opacity', 0.3)
+                    .transition().duration(400)
+                    .attr('opacity', 1);
+                // d3.selectAll(".location").style("fill", d=>{
+                d3.selectAll(".location").style("fill", d=>{
+                    // console.log(d)
+                    
+                    // if (d["e_title"]==x){
+                    //     return "yellow"
+                    if (d["e_title"]==x){
+                        return "rgb(234,78,33)"
+
+                    }
+                    else {return "rgb(38,82,106)"}
+                    
+                })
+                d3.selectAll(".rect").style("fill", d=>{
+                    console.log(d)
+                    
+                    // if (d["e_title"]==x){
+                    //     return "yellow"
+                    if (graph1[d].e_title==x){
+                        return "rgb(234,78,33)"
+
+                    }
+                    else {return "rgb(38,82,106)"}
+                    
+                })
+
+   
+		})
+            
+            //添加标题，和提示
+            svg3.append("g")
+                .attr("transform", "translate(" + (width / 2 -55) + "," + 80 + ")")
+                .append("text")
+                .text("苏轼生平饼图")
+                .attr("class", "title")
+                .attr("font-weight", 'bold')
+                .attr('font-size', '18')
+            
+            svg3.append("g")
+                .attr("transform", "translate(" + (width / 2-30) + "," + 350 + ")")
+                .append("text")
+                .text("请选择时期")
+                .attr("class", "title")
+                .attr("font-weight", 'bold')
+                .attr('font-size', '18')
+            
+            svg1.append("g")
+                .attr("transform", "translate(" + (width / 2 -80) + "," + 100 + ")")
+                .append("text")
+                .text("苏轼生平诗歌写作")
+                .attr("class", "title")
+                .attr("font-weight", 'bold')
+                .attr('font-size', '18')
+
+            svg2.append("g")
+                .attr("transform", "translate(" + (width / 2 -80) + "," + 50 + ")")
+                .append("text")
+                .text("苏轼的足迹")
+                .attr("class", "title")
+                .attr("font-weight", 'bold')
+                .attr('font-size', '18')
+
+                
+            // svg3.append("g")
+            //     .attr("transform", "translate(" + (width / 2 + 300) + "," + 50 + ")")
+            //     .append("text")
+            //     .text("Period")
+            //     .attr("class", "title_1") 
+
+
+        })
+    
+</script>
+</body>
+</html>
